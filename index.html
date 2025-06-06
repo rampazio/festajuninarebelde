@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Festa Junina — Lista de Comidas</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #fff8e1; margin: 0; padding: 0; }
+    .container { max-width: 600px; margin: 32px auto; padding: 24px; background: #fffbe7; border-radius: 16px; box-shadow: 0 2px 8px #ccc5b9; }
+    .header { text-align: center; margin-bottom: 24px; }
+    .header img { width: 160px; border-radius: 12px; }
+    h1 { margin: 8px 0 0 0; color: #ad5c0f; font-size: 2rem;}
+    .subtitle { color: #665c54; font-size: 1.1rem; margin-bottom: 10px;}
+    .data-local { font-size: 1rem; color: #bf7302; margin-bottom: 18px; }
+    .listas { display: flex; gap: 20px; justify-content: space-between; }
+    .coluna { flex: 1; background: #ffe0b2; border-radius: 12px; padding: 12px; }
+    .coluna h2 { text-align: center; color: #ad5c0f; }
+    ul { padding-left: 18px; min-height: 40px; }
+    .formulario { margin: 24px 0 0 0; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+    .formulario input, .formulario select { padding: 8px; border-radius: 8px; border: 1px solid #d2a679; font-size: 1rem;}
+    .formulario button { background: #ad5c0f; color: white; border: none; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 1rem;}
+    @media (max-width: 600px) {
+      .container { margin: 8px; padding: 10px; }
+      .listas { flex-direction: column; gap: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <img src="https://i.imgur.com/yTT6KmL.png" alt="Festa Junina">
+      <h1>Festa Junina 2024</h1>
+      <div class="subtitle">Marque aqui a comida que vai levar!</div>
+      <div class="data-local">📅 22/06/2024 &nbsp;|&nbsp; 📍 Rua Exemplo, 123, Bairro Tal</div>
+    </div>
+    <div class="listas">
+      <div class="coluna">
+        <h2>Doces</h2>
+        <ul id="lista-doces"></ul>
+      </div>
+      <div class="coluna">
+        <h2>Salgados</h2>
+        <ul id="lista-salgados"></ul>
+      </div>
+    </div>
+    <form id="formComida" class="formulario">
+      <input type="text" id="nome" placeholder="Seu nome" required>
+      <input type="text" id="comida" placeholder="Comida que vai levar" required>
+      <select id="tipo">
+        <option value="doce">Doce</option>
+        <option value="salgado">Salgado</option>
+      </select>
+      <button type="submit">Adicionar</button>
+    </form>
+  </div>
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script>
+    // Cole aqui seu firebaseConfig:
+    const firebaseConfig = {
+      // ... COLE AQUI ...
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    function renderizar() {
+      db.collection("comidas").orderBy("timestamp")
+        .onSnapshot((snap) => {
+          let doces = [], salgados = [];
+          snap.forEach(doc => {
+            let d = doc.data();
+            let item = `<li><b>${d.comida}</b> — ${d.nome}</li>`;
+            if (d.tipo === "doce") doces.push(item);
+            else salgados.push(item);
+          });
+          document.getElementById('lista-doces').innerHTML = doces.join('');
+          document.getElementById('lista-salgados').innerHTML = salgados.join('');
+        });
+    }
+    renderizar();
+
+    document.getElementById('formComida').onsubmit = async (e) => {
+      e.preventDefault();
+      let nome = document.getElementById('nome').value.trim();
+      let comida = document.getElementById('comida').value.trim();
+      let tipo = document.getElementById('tipo').value;
+      if (!nome || !comida) return;
+      await db.collection("comidas").add({
+        nome, comida, tipo, timestamp: new Date()
+      });
+      document.getElementById('comida').value = '';
+    };
+  </script>
+</body>
+</html>
